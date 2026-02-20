@@ -19,7 +19,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable()) // desactive les token csrf
             .authorizeHttpRequests(auth -> auth
                 .anyRequest().permitAll()
-            ) // autorise toutes les requettes 
+            ) // autorise toutes les requettes //test 
             .httpBasic(basic -> basic.disable())
             .formLogin(form -> form.disable());
 
