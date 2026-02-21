@@ -18,9 +18,13 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable()) // desactive les token csrf
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
+            		.requestMatchers("/h2-console/**").permitAll()
+                .anyRequest().authenticated()
+                
             ) // autorise toutes les requettes //test 
             .httpBasic(basic -> basic.disable())
+            //desactiver la protection d'affichage des frames (utilisé pour h2 via web interface) 
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .formLogin(form -> form.disable());
 
         return http.build();

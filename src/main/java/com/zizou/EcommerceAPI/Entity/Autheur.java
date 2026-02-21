@@ -21,7 +21,7 @@ public class Autheur {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	private String id ; 
+	private Long id ; 
 	private String nom ; 
 	private String prenom ; 
 	
