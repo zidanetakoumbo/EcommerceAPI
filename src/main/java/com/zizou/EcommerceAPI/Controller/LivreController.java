@@ -2,6 +2,7 @@ package com.zizou.EcommerceAPI.Controller;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,8 +14,8 @@ import com.zizou.EcommerceAPI.Entity.Livre;
 import com.zizou.EcommerceAPI.Service.LivreService;
 
 @RestController
-@RequestMapping("/livres")
-
+@RequestMapping("/api/livres")
+@CrossOrigin(origins = "*")
 public class LivreController {
 
 	private final LivreService lvService ; 
@@ -23,8 +24,9 @@ public class LivreController {
 		this.lvService = lvs;
 	}
 
-	@GetMapping("/")
+	@GetMapping("/list")
 	public List<Livre> getAll() {
+		System.out.println("testgetLivres");
 		return lvService.getAll();
 	}
 
@@ -39,8 +41,14 @@ public class LivreController {
 	}
 
 	@PostMapping("/{id}")
-	public Livre findById(@PathVariable String id) {
-		return lvService.getById(null);
+	public Livre findById(@PathVariable Long id) {
+		return lvService.getById(id);
 	}
+	
+	@PostMapping("/update/{id}")
+	public Livre UpdateLivre(@PathVariable Long id, @RequestBody Livre livre)  {
+		return lvService.update(id, livre) ; 
+	}
+	
 
 }
