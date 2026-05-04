@@ -48,6 +48,6 @@ public class ConnexionController {
 	@PostMapping("/logout")
 	public ResponseEntity<?> logout(HttpServletRequest request) {
 		
-		return ResponseEntity.ok("Déconnexion Réussie") ; 
+		return ResponseEntity.ok("Déconnexion Réussiee") ; 
 	}
 }
