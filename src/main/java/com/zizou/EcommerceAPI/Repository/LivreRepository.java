@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.zizou.EcommerceAPI.Entity.Livre;
 
 @Repository
-public interface LivreRepository extends JpaRepository<Livre,String >{
+public interface LivreRepository extends JpaRepository<Livre,Long >{
 
 }

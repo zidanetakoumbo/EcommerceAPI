@@ -1,0 +1,9 @@
+2026-05-04 01:31:46.532653+02:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "APP_USER_ROLES" non trouvée
+Table "APP_USER_ROLES" not found; SQL statement:
+INSERT INTO app_user_roles (app_user_id, roles) VALUES 
+('550e8400-e29b-41d4-a716-446655440000', 'ADMIN'),
+('550e8400-e29b-41d4-a716-446655440000', 'USER'),
+('a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6', 'USER'),
+('b2c3d4e5-f6g7-8h9i-0j1k-l2m3n4o5p6q7', 'MODERATOR'),
+('b2c3d4e5-f6g7-8h9i-0j1k-l2m3n4o5p6q7', 'USER') [42102-240]
