@@ -13,41 +13,52 @@ import com.zizou.EcommerceAPI.Configuration.JwtService;
 import com.zizou.EcommerceAPI.Service.AppUserService;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 
+/**
+ * Contrôleur gérant l'authentification des utilisateurs.
+ * Expose les endpoints de connexion et déconnexion.
+ */
 @RestController
 @RequestMapping("/api/connexion")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:4200")
 public class ConnexionController {
-	
-	
-	private final AuthenticationManager authenticationManager;
-	private final JwtService jwtService;
-	private final AppUserService userService; 
 
-	public ConnexionController(AuthenticationManager auth, AppUserService userServ,  JwtService jwt) {
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private final AppUserService userService;
 
-		this.authenticationManager = auth;
-		this.userService = userServ ; 
-		this.jwtService = jwt;
-	}
+    public ConnexionController(AuthenticationManager auth, AppUserService userServ, JwtService jwt) {
+        this.authenticationManager = auth;
+        this.userService = userServ;
+        this.jwtService = jwt;
+    }
 
-	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    /**
+     * Authentifie un utilisateur et retourne un token JWT.
+     * Le token est valable 3 heures.
+     */
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        // Vérification des credentials via Spring Security
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
 
-		authenticationManager
-		.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(),request.getPassword()));
+        // Génération du token JWT avec l'email comme sujet
+        String token = jwtService.generateToken(request.getEmail());
+        String userName = userService.getUserByEmail(request.getEmail())
+            .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"))
+            .getNom();
 
-		String token = jwtService.generateToken(request.getEmail());
-		String userName = userService.getUserByEmail(request.getEmail()).get().getNom(); 
+        return ResponseEntity.ok(new LoginResponse(token, request.getEmail(), userName));
+    }
 
-		return ResponseEntity.ok(new LoginResponse(token,request.getEmail(),userName));
-	}
-	
-	@PostMapping("/logout")
-	public ResponseEntity<?> logout(HttpServletRequest request) {
-		
-		return ResponseEntity.ok("Déconnexion Réussiee") ; 
-	}
+    /**
+     * Déconnexion côté client : le token JWT est invalidé par le front-end.
+     * Côté serveur (stateless), aucune action n'est requise.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        return ResponseEntity.ok("Déconnexion réussie");
+    }
 }

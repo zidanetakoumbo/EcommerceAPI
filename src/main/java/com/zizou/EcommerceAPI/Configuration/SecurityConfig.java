@@ -2,9 +2,9 @@ package com.zizou.EcommerceAPI.Configuration;
 
 import java.util.Arrays;
 
-import org.apache.tomcat.util.file.ConfigurationSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -20,89 +20,109 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Configuration de la sécurité Spring Security.
+ * Gère la chaîne de filtres JWT, CORS, et les règles d'accès aux endpoints.
+ */
 @Configuration
 @EnableWebSecurity
-@EnableWebMvc
-public class SecurityConfig implements WebMvcConfigurer {
+public class SecurityConfig {
 
-	private final UserDetailsService userDetailsService;
-	private JwtAuthenticationFilter jwtAuthFilter ; 
+    private final UserDetailsService userDetailsService;
+    private final JwtAuthenticationFilter jwtAuthFilter;
 
-	public SecurityConfig(UserDetailsService userDetailsService , JwtAuthenticationFilter jwtauth) {
-		this.userDetailsService = userDetailsService;
-		this.jwtAuthFilter = jwtauth ; 
-	}
+    public SecurityConfig(UserDetailsService userDetailsService, JwtAuthenticationFilter jwtAuthFilter) {
+        this.userDetailsService = userDetailsService;
+        this.jwtAuthFilter = jwtAuthFilter;
+    }
 
-	// cette classe doit obligatoirement etre dans le meme package ou classe que le
-	// springbootApplication pour fonctionner
-	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    /**
+     * Chaîne de filtres principale.
+     * - CORS configuré pour Angular (localhost:4200)
+     * - CSRF désactivé (API REST stateless)
+     * - Routes publiques : inscription, connexion, docs Swagger, console H2
+     * - Toutes les autres routes nécessitent un token JWT valide
+     */
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                // Toujours public
+                .requestMatchers("/h2-console/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/api/connexion/**", "/api/user/register").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-		http.cors(cors -> cors.configurationSource(corsConfigurationSource())) // responsable des origins
-			.csrf(csrf -> csrf.disable()) // desactive les token csrf
-			.authorizeHttpRequests(auth -> auth.requestMatchers("/h2-console/**").permitAll()
-						.requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-						.requestMatchers("/api/livres/**","/api/categories/**","/api/connexion/**", "/api/user/register", "/swagger-ui/**", "/v3/api-docs/**")
-						.permitAll()
-						.anyRequest().authenticated()) // autorise toutes les requettes //test
-			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-			.authenticationProvider(authProvider(userDetailsService, passwordEncoder()))
-				// 2. AJOUTER LE FILTRE JWT ICI (Indispensable pour le STATELESS)
-			.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-			.httpBasic(basic -> basic.disable())
-				// desactiver la protection d'affichage des frames (utilisé pour h2 via web
-				// interface)
-			.headers(headers -> headers.frameOptions(frame -> frame.disable())).formLogin(form -> form.disable());
+                // Catalogue : lecture publique, modifications réservées ADMIN
+                .requestMatchers(HttpMethod.GET, "/api/livres/**", "/api/autheurs/**", "/api/categories/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/livres/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/livres/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/livres/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/autheurs/**", "/api/categories/**").hasRole("ADMIN")
 
-		return http.build();
-	}
+                // Commandes : endpoints réservés à l'admin
+                .requestMatchers(HttpMethod.GET, "/api/commandes/statut/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/commandes/non-livrees").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/commandes/*/statut").hasRole("ADMIN")
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+                // Utilisateurs : liste réservée ADMIN
+                .requestMatchers(HttpMethod.GET, "/api/user/all").hasRole("ADMIN")
 
-	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-		return authConfig.getAuthenticationManager();
-	}
+                // Tout le reste : utilisateur connecté (USER ou ADMIN)
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authenticationProvider(authProvider(userDetailsService, passwordEncoder()))
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .httpBasic(basic -> basic.disable())
+            // Nécessaire pour afficher la console H2 dans un iframe
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+            .formLogin(form -> form.disable());
 
-	@Bean
-	public AuthenticationProvider authProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+        return http.build();
+    }
 
-		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+    /** Encodeur BCrypt pour les mots de passe */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-		authProvider.setPasswordEncoder(passwordEncoder);
+    /** Gestionnaire d'authentification exposé pour être injecté dans les controllers */
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
 
-		return authProvider;
-	}
+    /**
+     * Fournisseur d'authentification DAO.
+     * Utilise CustomUserDetailsService pour charger l'utilisateur par email,
+     * et BCrypt pour vérifier le mot de passe.
+     */
+    @Bean
+    public AuthenticationProvider authProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(passwordEncoder);
+        authProvider.setUserDetailsService(userDetailsService);
+        return authProvider;
+    }
 
-	// pernet de definir les règles d'accès pour les requettes venat du front-end
-	// angular , cette methode est la porte d'entrée
+    /**
+     * Configuration CORS pour autoriser les requêtes depuis le front-end Angular.
+     * Autorise les méthodes HTTP nécessaires à une API REST classique.
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
+        configuration.setAllowCredentials(true);
 
-	@Bean
-	public CorsConfigurationSource corsConfigurationSource() {
-		CorsConfiguration configuration = new CorsConfiguration();
-
-		// 1. Autorise ton front-end Angular
-		configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
-
-		// 2. Autorise les méthodes HTTP nécessaires
-		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-		// 3. Autorise les Headers (Content-Type pour le JSON, Authorization pour ton
-		// JWT)
-		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
-
-		// 4. Permet l'envoi de cookies ou credentials si besoin
-		configuration.setAllowCredentials(true);
-
-		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/**", configuration); // Applique à toutes les routes
-		return source;
-	}
-
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 }

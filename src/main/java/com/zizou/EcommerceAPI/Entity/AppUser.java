@@ -40,6 +40,8 @@ public class AppUser implements UserDetails {
 	private String password;
 	private String dateNaissance;
 	
+	
+	
 	private List<String> roles = new ArrayList<>(); // ADMIN USER
 
 	// implmentation de userdetails pour spring Security
@@ -61,6 +63,7 @@ public class AppUser implements UserDetails {
 	@Override
 	public String getUsername() {
 		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
@@ -116,8 +119,8 @@ public class AppUser implements UserDetails {
 		return roles;
 	}
 
-	public void setRoles(ArrayList<String> roles) {
-		this.roles = roles;
+	public void setRoles(List<String> list) {
+		this.roles = list;
 	}
 
 	public void setPassword(String password) {
