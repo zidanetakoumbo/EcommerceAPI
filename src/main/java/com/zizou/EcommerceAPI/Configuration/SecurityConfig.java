@@ -122,7 +122,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        // En prod, l'URL Vercel est lue depuis la variable d'env ALLOWED_ORIGINS
+        String allowedOrigins = System.getenv("ALLOWED_ORIGINS");
+        if (allowedOrigins != null && !allowedOrigins.isBlank()) {
+            configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        } else {
+            configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        }
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
         configuration.setAllowCredentials(true);
