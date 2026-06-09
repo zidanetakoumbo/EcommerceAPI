@@ -1,11 +1,5 @@
 package com.zizou.EcommerceAPI.Controller;
 
-<<<<<<< HEAD
-import lombok.Getter;
-
-@Getter
-=======
->>>>>>> dev
 public class LoginResponse {
     private String token;
     private String userName ; 

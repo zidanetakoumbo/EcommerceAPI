@@ -17,26 +17,9 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-<<<<<<< HEAD
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-@Entity
-@Data
-@AllArgsConstructor
-@Getter
-@Setter
-@NoArgsConstructor
-@Builder
-=======
 import jakarta.persistence.JoinColumn;
 
 @Entity
->>>>>>> dev
 public class AppUser implements UserDetails {
 
 	@Id
