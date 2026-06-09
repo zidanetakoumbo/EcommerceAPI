@@ -9,10 +9,8 @@ import com.zizou.EcommerceAPI.Entity.Livre;
 import com.zizou.EcommerceAPI.Repository.LivreRepository;
 
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 
 @Service
-@RequiredArgsConstructor // dans le constructeur initialise tout les final et notnull
 public class LivreService {
 
 	private final LivreRepository livreRepos;
