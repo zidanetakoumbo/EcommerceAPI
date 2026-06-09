@@ -68,6 +68,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/commandes/non-livrees").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/commandes/*/statut").hasRole("ADMIN")
 
+                // Paiement : webhook public (vérifié par signature Stripe), remboursement ADMIN
+                // Le webhook DOIT être public : Stripe ne peut pas envoyer un JWT !
+                // La sécurité du webhook est assurée par la vérification de signature dans PaiementService
+                .requestMatchers(HttpMethod.POST, "/api/paiement/webhook").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/paiement/rembourser/**").hasRole("ADMIN")
+
                 // Utilisateurs : liste réservée ADMIN
                 .requestMatchers(HttpMethod.GET, "/api/user/all").hasRole("ADMIN")
 

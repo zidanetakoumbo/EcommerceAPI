@@ -45,10 +45,10 @@ public class Livre {
 	private int quantiteVendue = 0;
 
 	
-	@Column(length = 10000)
+	@Column(columnDefinition = "LONGTEXT")
 	private String openCouverture;
-	
-	@Column(length = 10000)
+
+	@Column(columnDefinition = "LONGTEXT")
 	private String closeCouverture;
 
 	@ManyToOne

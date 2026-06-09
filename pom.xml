@@ -26,11 +26,12 @@
 
 	<dependencies>
 
-		<!-- ── Base de données H2 (fichier local, développement) ──────────── -->
+		<!-- ── Base de données mysql (fichier local, développement) ──────────── -->
+		<!-- Ajoutez ça -->
 		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
+		    <groupId>com.mysql</groupId>
+		    <artifactId>mysql-connector-j</artifactId>
+		    <scope>runtime</scope>
 		</dependency>
 
 		<!-- ── JPA / Hibernate ───────────────────────────────────────────── -->
@@ -109,6 +110,15 @@
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
 			<optional>true</optional>
+		</dependency>
+
+		<!-- ── Stripe Java SDK (paiement en ligne) ───────────────────────── -->
+		<!-- Permet de créer des intentions de paiement, gérer les webhooks    -->
+		<!-- et traiter les remboursements via l'API Stripe                    -->
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>24.3.0</version>
 		</dependency>
 
 	</dependencies>

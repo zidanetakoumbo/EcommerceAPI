@@ -31,7 +31,8 @@ public class PanierService {
 	private final PanierRepository panierRepos;
 	private final PanierItemRepository panierItemRepos;
 	private final LivreRepository livreRepos;
-	private final AppUserRepository userRepos;
+	private final AppUserRepository 
+	userRepos;
 
 	public PanierService(PanierRepository panierRepos, PanierItemRepository panierItemRepos, LivreRepository livreRepos,
 			AppUserRepository userRepos) {
