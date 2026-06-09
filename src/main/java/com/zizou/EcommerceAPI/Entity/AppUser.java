@@ -2,16 +2,22 @@ package com.zizou.EcommerceAPI.Entity;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+<<<<<<< HEAD
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,6 +32,11 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Builder
+=======
+import jakarta.persistence.JoinColumn;
+
+@Entity
+>>>>>>> dev
 public class AppUser implements UserDetails {
 
 	@Id
@@ -37,19 +48,18 @@ public class AppUser implements UserDetails {
 	private String email;
 	private String password;
 	private String dateNaissance;
-	
-	private List<String> roles = new ArrayList<>(); // ADMIN USER
 
-	// implmentation de userdetails pour spring Security
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+	@Column(name = "role")
+	private List<String> roles = new ArrayList<>();
 
-	// Dans un programme cete methode ne doit jamais retrouner null sinon le
-	// programe plante à la connexion car
-	// tout user doit avoir un ROLE , meme si c'est pas definie ou vide
-	// c'est ici qu"on definie le systeme de role.
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		// TODO Auto-generated method stub
-		return Collections.emptyList();
+		if (roles == null) return List.of();
+		return roles.stream()
+				.map(SimpleGrantedAuthority::new)
+				.collect(Collectors.toList());
 	}
 
 	public String getPassword() {
@@ -58,8 +68,7 @@ public class AppUser implements UserDetails {
 
 	@Override
 	public String getUsername() {
-		// TODO Auto-generated method stub
-		return null;
+		return email;
 	}
 
 	public String getId() {
@@ -114,8 +123,8 @@ public class AppUser implements UserDetails {
 		return roles;
 	}
 
-	public void setRoles(ArrayList<String> roles) {
-		this.roles = roles;
+	public void setRoles(List<String> list) {
+		this.roles = list;
 	}
 
 	public void setPassword(String password) {
